@@ -5,7 +5,7 @@ import SafeIcon from '../common/SafeIcon';
 
 const { FiDownload, FiMusic, FiDisc, FiList } = FiIcons;
 
-const Hero = () => {
+const Hero = React.memo(() => {
   const features = [
     { 
       icon: FiMusic, 
@@ -58,7 +58,7 @@ const Hero = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-xl md:text-2xl text-gray-500 dark:text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed"
+            className="text-xl md:text-2xl text-black dark:text-gray-300 mb-12 max-w-4xl mx-auto leading-relaxed"
           >
             Paste any Spotify link and download high-quality MP3 files instantly. 
             <br />
@@ -90,7 +90,7 @@ const Hero = () => {
                   />
                 </div>
                 <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">{feature.title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{feature.desc}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-400 leading-relaxed">{feature.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -98,6 +98,6 @@ const Hero = () => {
       </motion.div>
     </div>
   );
-};
+});
 
 export default Hero;

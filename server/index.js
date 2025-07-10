@@ -6,7 +6,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import downloadRoutes from './routes/download.js';
 import { startCleanupJob } from './utils/cleanup.js';
-import { logger } from './utils/logger.js'; // Import logger
+import { logger } from './utils/logger.js';
+import { setIoInstance } from './utils/downloadQueue.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,6 +25,9 @@ const io = new Server(server, {
 app.use(cors());
 app.use(express.json());
 app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
+
+// Set the io instance for the download queue
+setIoInstance(io);
 
 // Make io available to routes
 app.use((req, res, next) => {

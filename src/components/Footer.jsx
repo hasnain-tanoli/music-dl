@@ -5,7 +5,7 @@ import SafeIcon from '../common/SafeIcon';
 
 const { FiHeart, FiGithub, FiMusic } = FiIcons;
 
-const Footer = ({ darkMode }) => {
+const Footer = React.memo(({ darkMode }) => {
   return (
     <motion.footer
       initial={{ opacity: 0 }}
@@ -28,7 +28,7 @@ const Footer = ({ darkMode }) => {
             </span>
           </div>
           
-          <p className={`text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          <p className={`text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
             Made with <SafeIcon icon={FiHeart} className="inline text-red-500 mx-1 animate-pulse" /> for music lovers worldwide
           </p>
           
@@ -39,7 +39,7 @@ const Footer = ({ darkMode }) => {
               className={`flex items-center space-x-2 text-base font-medium transition-all duration-300 ${
                 darkMode 
                   ? 'text-gray-300 hover:text-white' 
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-700 hover:text-gray-900'
               }`}
             >
               <SafeIcon icon={FiGithub} className="text-xl" />
@@ -48,7 +48,7 @@ const Footer = ({ darkMode }) => {
           </div>
           
           <div className="pt-6 border-t border-gray-200/20 dark:border-gray-700/20">
-            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
               © 2024 Spotify Downloader. Educational use only.
             </div>
           </div>
@@ -56,6 +56,6 @@ const Footer = ({ darkMode }) => {
       </div>
     </motion.footer>
   );
-};
+});
 
 export default Footer;

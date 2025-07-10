@@ -46,33 +46,34 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
   }, [url]);
 
   const handleDownload = async () => {
-    if (!isValid || !url.trim()) {
-      toast.error('Please enter a valid Spotify URL');
+    if (!isValid || !url.trim() || !metadata) {
+      toast.error('Please enter a valid Spotify URL and wait for it to be verified.');
       return;
     }
 
     try {
       setIsDownloading(true);
-      setDownloadProgress({ 
-        stage: 'initializing', 
-        progress: 0, 
+      setDownloadProgress({
+        stage: 'initializing',
+        progress: 0,
         message: 'Preparing download...',
         currentTrack: null,
         totalTracks: 0,
         completedTracks: 0
       });
 
-      await downloadSpotifyContent(url, (progress) => {
+      await downloadSpotifyContent(url, metadata, (progress) => {
         setDownloadProgress(progress);
       });
 
       toast.success('Download completed successfully!');
+      setUrl(''); // Clear input field on success
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error(error.message || 'Download failed. Please try again. Ensure the URL is correct and the server is running.');
+      toast.error(error.message || 'An unknown error occurred.');
     } finally {
       setIsDownloading(false);
-      setDownloadProgress(null); // Reset progress bar
+      setDownloadProgress(null); // Reset download progress on completion or error
     }
   };
 

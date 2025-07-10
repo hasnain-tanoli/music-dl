@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -8,24 +8,39 @@ import Footer from './components/Footer';
 import Disclaimer from './components/Disclaimer';
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false); // Start with light mode
+  const [darkMode, setDarkMode] = useState(true); // Start with dark mode
   const [downloadProgress, setDownloadProgress] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    if (!darkMode) {
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode(prevMode => {
+      const newMode = !prevMode;
+      if (newMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      localStorage.setItem('theme', newMode ? 'dark' : 'light');
+      return newMode;
+    });
+  }, []);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && darkMode)) {
       document.documentElement.classList.add('dark');
+      setDarkMode(true);
     } else {
       document.documentElement.classList.remove('dark');
+      setDarkMode(false);
     }
-  };
+  }, []);
 
   return (
     <div className={`min-h-screen transition-all duration-700 ${
       darkMode 
         ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white' 
-        : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 text-gray-900'
+        : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'
     }`}>
       <Toaster 
         position="top-right"

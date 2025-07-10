@@ -24,6 +24,15 @@ export const startCleanupJob = () => {
 
 const cleanupOldFiles = async () => {
   try {
+    // First, check if the directory exists.
+    try {
+      await fs.access(DOWNLOADS_DIR);
+    } catch (e) {
+      // If it doesn't exist, there's nothing to clean up.
+      console.log('Downloads directory does not exist, skipping cleanup.');
+      return;
+    }
+
     const now = Date.now();
     const cutoffTime = now - (CLEANUP_INTERVAL_MINUTES * 60 * 1000);
     

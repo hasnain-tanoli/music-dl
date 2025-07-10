@@ -5,7 +5,7 @@ import SafeIcon from '../common/SafeIcon';
 
 const { FiSun, FiMoon, FiMusic } = FiIcons;
 
-const Header = ({ darkMode, toggleDarkMode }) => {
+const Header = React.memo(({ darkMode, toggleDarkMode }) => {
   return (
     <motion.header 
       initial={{ y: -50, opacity: 0 }}
@@ -64,6 +64,6 @@ const Header = ({ darkMode, toggleDarkMode }) => {
       </div>
     </motion.header>
   );
-};
+});
 
 export default Header;

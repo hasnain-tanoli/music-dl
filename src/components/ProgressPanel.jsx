@@ -107,7 +107,7 @@ const ProgressPanel = ({ progress, darkMode, isDownloading }) => {
               {progress.totalTracks > 0 && (
                 <div className="mt-4 flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Track {progress.completedTracks + 1} of {progress.totalTracks}
+                    Downloaded {progress.completedTracks} of {progress.totalTracks} tracks
                   </span>
                   <div className="flex space-x-1">
                     {Array.from({ length: Math.min(progress.totalTracks, 10) }).map((_, i) => (

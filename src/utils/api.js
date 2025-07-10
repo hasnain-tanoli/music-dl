@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 
 const API_BASE_URL = 'http://localhost:3001';
 
-export const downloadSpotifyContent = async (url, onProgress) => {
+export const downloadSpotifyContent = async (url, metadata, onProgress) => {
   return new Promise((resolve, reject) => {
     // Connect to WebSocket for real-time updates
     const socket = io(API_BASE_URL);
@@ -21,7 +21,7 @@ export const downloadSpotifyContent = async (url, onProgress) => {
       if (data.downloadUrl) {
         const link = document.createElement('a');
         link.href = `${API_BASE_URL}${data.downloadUrl}`;
-        link.download = data.filename || 'download.zip'; // Changed default to .zip
+        link.download = data.filename; // Use the pretty, sanitized name from the server
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -44,7 +44,8 @@ export const downloadSpotifyContent = async (url, onProgress) => {
     socket.on('connect', () => {
       axios.post(`${API_BASE_URL}/api/download`, {
         url,
-        socketId: socket.id
+        socketId: socket.id,
+        title: metadata.title // Pass the title to the backend
       }).catch((error) => {
         socket.disconnect();
         reject(new Error(error.response?.data?.message || 'Failed to start download'));

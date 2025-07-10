@@ -1,8 +1,8 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit'; // Import rate-limit
-import { downloadSpotifyContent } from '../utils/spotdl.js';
+import { addDownloadToQueue } from '../utils/downloadQueue.js';
 import { validateSpotifyUrl } from '../utils/validation.js';
-import { logger } from '../utils/logger.js'; // Import logger
+import { logger } from '../utils/logger.js';
 
 const router = express.Router();
 
@@ -19,12 +19,12 @@ router.use('/download', downloadLimiter); // Apply rate limiting to the download
 
 router.post('/download', async (req, res) => {
   try {
-    const { url, socketId } = req.body;
+    const { url, socketId, title } = req.body;
     
-    if (!url || !socketId) {
+    if (!url || !socketId || !title) {
       return res.status(400).json({ 
         success: false, 
-        message: 'URL and socket ID are required' 
+        message: 'URL, socket ID, and title are required' 
       });
     }
     
@@ -43,9 +43,8 @@ router.post('/download', async (req, res) => {
     });
     
     // Process download asynchronously
-    // Assuming downloadSpotifyContent emits 'download_complete' with { downloadUrl, filename }
-    // and 'download_error' with { message }
-    downloadSpotifyContent(url, socketId, req.io);
+    // Add to download queue instead of direct processing
+    addDownloadToQueue({ url, title, socketId });
     
   } catch (error) {
     logger.error('Download route error:', error);

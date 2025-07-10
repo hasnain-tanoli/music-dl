@@ -19,72 +19,86 @@ const initDownloadsDir = async () => {
 // Call init function
 initDownloadsDir().catch(err => console.error('Failed to create downloads directory:', err));
 
-export const downloadSpotifyContent = async (url, socketId, io) => {
+export const downloadSpotifyContent = async (url, title, socketId, io) => { // io is now passed from downloadQueue
   const downloadId = uuidv4();
   const downloadPath = path.join(DOWNLOADS_DIR, downloadId);
-  
+
   try {
     await fs.mkdir(downloadPath, { recursive: true });
-    
-    // Emit initial progress
+
     io.to(socketId).emit('download_progress', {
       stage: 'initializing',
       progress: 0,
-      message: 'Starting download process...',
+      message: 'Verifying download utility...',
       currentTrack: null,
       totalTracks: 0,
-      completedTracks: 0
+      completedTracks: 0,
     });
-    
-    // Check if spotdl is available
-    const spotdlProcess = spawn('python', ['-m', 'spotdl', '--version'], { stdio: 'pipe' });
-    
-    spotdlProcess.on('error', (error) => {
-      console.error('spotDL not found, using simulation mode');
-      simulateDownload(url, socketId, io, downloadPath, downloadId);
-      return;
+
+    // Check if spotdl is available and working
+    const spotdlCheck = spawn('python', ['-m', 'spotdl', '--version']);
+    let checkError = '';
+    spotdlCheck.stderr.on('data', (data) => {
+      checkError += data.toString();
     });
-    
-    spotdlProcess.on('close', (code) => {
-      if (code === 0) {
-        runSpotDL(url, socketId, io, downloadPath, downloadId);
-      } else {
-        console.error('spotDL not working properly, using simulation mode');
-        simulateDownload(url, socketId, io, downloadPath, downloadId);
+
+    spotdlCheck.on('error', (err) => {
+      console.error('Spawn error for spotdl check:', err);
+      io.to(socketId).emit('download_error', {
+        message: 'Server-side error: Download utility is not configured correctly.',
+      });
+    });
+
+    spotdlCheck.on('close', (code) => {
+      if (code !== 0) {
+        console.error(`spotdl --version check failed with code ${code}:`, checkError);
+        io.to(socketId).emit('download_error', {
+          message: 'Server-side error: Download utility is not configured correctly.',
+        });
+        return;
       }
+      // If check is successful, proceed with the actual download
+      runSpotDL(url, title, socketId, io, downloadPath, downloadId);
     });
-    
+
   } catch (error) {
     console.error('Download error:', error);
     io.to(socketId).emit('download_error', {
-      message: 'Failed to start download'
+      message: 'Failed to start download. Please check server logs.',
     });
+    // Cleanup in case of early failure
+    await fs.rm(downloadPath, { recursive: true, force: true }).catch(err => console.error(`Failed to clean up directory ${downloadPath}:`, err));
   }
 };
 
-const runSpotDL = (url, socketId, io, downloadPath, downloadId) => {
+const runSpotDL = (url, title, socketId, io, downloadPath, downloadId) => {
   const args = [
     url,
     '--output', downloadPath,
     '--format', 'mp3',
     '--bitrate', '320k',
+    '--threads', '4', // Potentially speed up downloads
     '--print-errors'
   ];
-  
+
   const spotdlProcess = spawn('python', ['-m', 'spotdl', ...args], {
     stdio: ['ignore', 'pipe', 'pipe']
   });
-  
+
   let totalTracks = 0;
   let completedTracks = 0;
   let currentTrack = '';
-  
-  // Parse stdout for progress
+  let stderrOutput = '';
+
+  spotdlProcess.stderr.on('data', (data) => {
+    stderrOutput += data.toString();
+    console.error('spotDL stderr:', data.toString());
+  });
+
   spotdlProcess.stdout.on('data', (data) => {
     const output = data.toString();
-    console.log('spotDL output:', output);
-    
-    // Parse different types of output
+    console.log('spotDL stdout:', output);
+
     if (output.includes('Found')) {
       const match = output.match(/Found (\d+) songs/);
       if (match) {
@@ -99,13 +113,12 @@ const runSpotDL = (url, socketId, io, downloadPath, downloadId) => {
         });
       }
     }
-    
+
     if (output.includes('Downloading')) {
       const match = output.match(/Downloading "([^"]+)"/);
       if (match) {
         currentTrack = match[1];
-        const progress = totalTracks > 0 ? ((completedTracks / totalTracks) * 80) + 10 : 50;
-        
+        const progress = totalTracks > 0 ? 10 + (completedTracks / totalTracks) * 80 : 50;
         io.to(socketId).emit('download_progress', {
           stage: 'downloading',
           progress,
@@ -116,66 +129,38 @@ const runSpotDL = (url, socketId, io, downloadPath, downloadId) => {
         });
       }
     }
-    
+
     if (output.includes('Downloaded')) {
       completedTracks++;
-      const progress = totalTracks > 0 ? ((completedTracks / totalTracks) * 80) + 10 : 80;
-      
+      // Ensure completedTracks does not exceed totalTracks for display and calculation
+      const displayCompletedTracks = Math.min(completedTracks, totalTracks > 0 ? totalTracks : completedTracks);
+      const progress = totalTracks > 0 ? 10 + (displayCompletedTracks / totalTracks) * 80 : 80;
       io.to(socketId).emit('download_progress', {
         stage: 'downloading',
-        progress,
-        message: `Downloaded ${completedTracks} of ${totalTracks} tracks`,
+        progress: Math.min(progress, 100), // Cap progress at 100%
+        message: `Downloaded ${displayCompletedTracks} of ${totalTracks} tracks`,
         currentTrack,
         totalTracks,
-        completedTracks
+        completedTracks: displayCompletedTracks // Send capped value
       });
     }
   });
-  
-  // Handle errors
-  spotdlProcess.stderr.on('data', (data) => {
-    console.error('spotDL error:', data.toString());
-  });
-  
-  // Handle completion
+
   spotdlProcess.on('close', async (code) => {
-    if (code === 0) {
-      await processDownloadCompletion(socketId, io, downloadPath, downloadId, totalTracks);
+    if (code === 0 && !stderrOutput.includes('Error:')) {
+      await processDownloadCompletion(title, socketId, io, downloadPath, downloadId, totalTracks);
     } else {
+      console.error(`spotDL process exited with code ${code}. Stderr: ${stderrOutput}`);
       io.to(socketId).emit('download_error', {
-        message: 'Download failed'
+        message: `Download failed: ${stderrOutput || 'An unknown error occurred.'}`
       });
+      // Cleanup failed download directory
+      await fs.rm(downloadPath, { recursive: true, force: true }).catch(err => console.error(`Failed to clean up directory ${downloadPath}:`, err));
     }
   });
 };
 
-const simulateDownload = async (url, socketId, io, downloadPath, downloadId) => {
-  // Simulate the download process for demo purposes
-  const stages = [
-    { stage: 'parsing', progress: 20, message: 'Parsing Spotify URL...', delay: 1000 },
-    { stage: 'downloading', progress: 40, message: 'Downloading track 1 of 1', delay: 2000, currentTrack: 'Demo Song - Artist' },
-    { stage: 'downloading', progress: 60, message: 'Processing audio...', delay: 1500 },
-    { stage: 'downloading', progress: 80, message: 'Adding metadata...', delay: 1000 },
-    { stage: 'packaging', progress: 90, message: 'Preparing download...', delay: 500 }
-  ];
-  
-  for (const stage of stages) {
-    await new Promise(resolve => setTimeout(resolve, stage.delay));
-    io.to(socketId).emit('download_progress', {
-      ...stage,
-      totalTracks: 1,
-      completedTracks: stage.progress >= 80 ? 1 : 0
-    });
-  }
-  
-  // Create a demo file
-  const demoContent = 'This is a demo file. In a real implementation, this would be an MP3 file.';
-  await fs.writeFile(path.join(downloadPath, 'demo-song.mp3'), demoContent);
-  
-  await processDownloadCompletion(socketId, io, downloadPath, downloadId, 1);
-};
-
-const processDownloadCompletion = async (socketId, io, downloadPath, downloadId, totalTracks) => {
+const processDownloadCompletion = async (title, socketId, io, downloadPath, downloadId, totalTracks) => {
   try {
     io.to(socketId).emit('download_progress', {
       stage: 'packaging',
@@ -185,42 +170,59 @@ const processDownloadCompletion = async (socketId, io, downloadPath, downloadId,
       totalTracks,
       completedTracks: totalTracks
     });
-    
+
     const files = await fs.readdir(downloadPath);
-    const audioFiles = files.filter(file => 
+    const audioFiles = files.filter(file =>
       file.endsWith('.mp3') || file.endsWith('.flac') || file.endsWith('.m4a')
     );
-    
+
     if (audioFiles.length === 0) {
-      throw new Error('No audio files found');
+      throw new Error('No audio files found after download process.');
     }
-    
+
     let downloadUrl, filename;
-    
+    // Sanitize title for filesystem
+    const safeTitle = title.replace(/[^a-z0-9_ -]/gi, '_').replace(/\s+/g, '-');
+
     if (audioFiles.length === 1) {
-      // Single file - serve directly
-      filename = audioFiles[0];
+      // Single file - serve directly with a clean name
+      const originalFilename = audioFiles[0];
+      const newFilename = `${safeTitle}.mp3`;
+      await fs.rename(path.join(downloadPath, originalFilename), path.join(downloadPath, newFilename));
+      
+      filename = newFilename;
       downloadUrl = `/downloads/${downloadId}/${filename}`;
     } else {
-      // Multiple files - create zip
-      filename = `spotify_download_${downloadId}.zip`;
-      const zipPath = path.join(downloadPath, filename);
+      // Multiple files - create a named zip
+      filename = `spotify-download-${safeTitle}.zip`;
+      const zipPath = path.join(DOWNLOADS_DIR, downloadId, filename); // Corrected zip path
       
       await createZip(downloadPath, zipPath, audioFiles);
       downloadUrl = `/downloads/${downloadId}/${filename}`;
     }
-    
+
+    io.to(socketId).emit('download_progress', {
+      stage: 'completed',
+      progress: 100,
+      message: 'Download complete!',
+      currentTrack: null,
+      totalTracks,
+      completedTracks: totalTracks
+    });
+
     io.to(socketId).emit('download_complete', {
       downloadUrl,
       filename,
       totalFiles: audioFiles.length
     });
-    
+
   } catch (error) {
     console.error('Processing completion error:', error);
     io.to(socketId).emit('download_error', {
-      message: 'Failed to process downloaded files'
+      message: 'Failed to process downloaded files.'
     });
+    // Cleanup directory on processing error
+    await fs.rm(downloadPath, { recursive: true, force: true }).catch(err => console.error(`Failed to clean up directory ${downloadPath}:`, err));
   }
 };
 

@@ -5,7 +5,7 @@ import SafeIcon from '../common/SafeIcon';
 
 const { FiAlertTriangle, FiInfo } = FiIcons;
 
-const Disclaimer = ({ darkMode }) => {
+const Disclaimer = React.memo(({ darkMode }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -57,6 +57,6 @@ const Disclaimer = ({ darkMode }) => {
       </div>
     </motion.div>
   );
-};
+});
 
 export default Disclaimer;
