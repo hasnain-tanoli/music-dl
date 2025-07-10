@@ -94,18 +94,21 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 ${
+      className={`rounded-3xl p-8 backdrop-blur-xl border transition-all duration-500 shadow-premium ${
         darkMode 
-          ? 'bg-spotify-light/30 border-spotify-light/20' 
-          : 'bg-white/60 border-gray-200'
+          ? 'bg-gray-800/50 border-gray-700/50 shadow-premium-lg' 
+          : 'bg-white/80 border-gray-200/50 shadow-premium-xl'
       }`}
     >
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
-          <label htmlFor="spotify-url" className="block text-lg font-semibold mb-3">
-            Spotify URL
+          <label htmlFor="spotify-url" className="block text-xl font-bold mb-4 text-gray-900 dark:text-white">
+            <span className="flex items-center space-x-2">
+              <span>Spotify URL</span>
+              <div className="w-2 h-2 bg-spotify-green rounded-full animate-pulse"></div>
+            </span>
           </label>
-          <div className="relative">
+          <div className="relative group">
             <input
               id="spotify-url"
               type="text"
@@ -114,20 +117,24 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
               placeholder="Paste Spotify track, album, or playlist link here..."
               disabled={isDownloading}
               aria-label="Spotify URL input"
-              className={`w-full px-4 py-4 pr-12 rounded-xl border-2 transition-all duration-300 text-lg ${
+              className={`w-full px-6 py-5 pr-14 rounded-2xl border-2 transition-all duration-500 text-lg font-medium backdrop-blur-sm ${
                 darkMode
-                  ? 'bg-spotify-dark/50 border-spotify-light/30 text-white placeholder-gray-400 focus:border-spotify-green'
-                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-spotify-green'
-              } focus:outline-none focus:ring-2 focus:ring-spotify-green/20 ${
-                isValid === false ? 'border-red-400' : ''
-              } ${isValid === true ? 'border-green-400' : ''}`}
+                  ? 'bg-gray-900/50 border-gray-700/50 text-white placeholder-gray-400 focus:border-spotify-green hover:border-gray-600'
+                  : 'bg-white/80 border-gray-300/50 text-gray-900 placeholder-gray-500 focus:border-spotify-green hover:border-gray-400'
+              } focus:outline-none focus:ring-4 focus:ring-spotify-green/20 focus:shadow-glow ${
+                isValid === false ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20' : ''
+              } ${isValid === true ? 'border-green-400 focus:border-green-400 focus:ring-green-400/20' : ''}`}
             />
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+            <div className="absolute right-5 top-1/2 transform -translate-y-1/2">
               <SafeIcon 
                 icon={getValidationIcon()} 
-                className={`text-xl ${getValidationColor()}`}
+                className={`text-2xl ${getValidationColor()}`}
               />
             </div>
+            <div className={`absolute inset-0 rounded-2xl transition-all duration-300 pointer-events-none ${
+              isValid === true ? 'bg-green-400/5 ring-2 ring-green-400/20' : 
+              isValid === false ? 'bg-red-400/5 ring-2 ring-red-400/20' : ''
+            }`}></div>
           </div>
           
           <AnimatePresence>
@@ -136,7 +143,7 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="text-red-400 text-sm mt-2"
+                className="text-red-400 text-sm mt-3 font-medium"
               >
                 Please enter a valid Spotify URL (track, album, or playlist)
               </motion.p>
@@ -156,21 +163,21 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
           whileHover={{ scale: isValid && !isDownloading ? 1.02 : 1 }}
           whileTap={{ scale: isValid && !isDownloading ? 0.98 : 1 }}
           aria-label="Download Spotify content"
-          className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3 ${
+          className={`w-full py-5 px-8 rounded-2xl font-bold text-lg transition-all duration-500 flex items-center justify-center space-x-3 shadow-lg ${
             isValid && !isDownloading
-              ? 'bg-spotify-green hover:bg-spotify-green/90 text-white shadow-lg shadow-spotify-green/25'
+              ? 'bg-gradient-to-r from-spotify-green to-emerald-500 hover:from-spotify-green/90 hover:to-emerald-500/90 text-white shadow-glow hover:shadow-glow-lg transform hover:-translate-y-0.5'
               : 'bg-gray-600 text-gray-300 cursor-not-allowed'
           }`}
         >
           {isDownloading ? (
             <>
-              <SafeIcon icon={FiLoader} className="text-xl animate-spin" />
+              <SafeIcon icon={FiLoader} className="text-2xl animate-spin" />
               <span>Downloading...</span>
             </>
           ) : (
             <>
-              <SafeIcon icon={FiDownload} className="text-xl" />
-              <span>Download</span>
+              <SafeIcon icon={FiDownload} className="text-2xl" />
+              <span>Download Music</span>
             </>
           )}
         </motion.button>
