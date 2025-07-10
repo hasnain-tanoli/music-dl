@@ -70,7 +70,7 @@ Ensure you have the following installed:
 To start both the frontend and backend servers concurrently:
 
 ```bash
-npm start
+npm run dev
 ```
 
 This command will launch:
