@@ -39,40 +39,41 @@ const ProgressPanel = ({ progress, darkMode, isDownloading }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
-        className={`rounded-2xl p-8 backdrop-blur-sm border transition-all duration-300 ${
+        className={`rounded-3xl p-8 backdrop-blur-xl border transition-all duration-500 shadow-premium ${
           darkMode
-            ? 'bg-spotify-light/30 border-spotify-light/20'
-            : 'bg-white border-gray-300 shadow-md'
+            ? 'bg-gray-800/50 border-gray-700/50 shadow-premium-lg'
+            : 'bg-white/80 border-gray-200/50 shadow-premium-xl'
         }`}
       >
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold">Download Progress</h3>
-            <div className={`flex items-center space-x-2 ${getStageColor()}`}>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Download Progress</h3>
+            <div className={`flex items-center space-x-3 ${getStageColor()}`}>
+              <div className={`w-3 h-3 rounded-full ${getStageColor().replace('text-', 'bg-')} animate-pulse`}></div>
               <SafeIcon 
                 icon={getStageIcon()} 
-                className={`text-xl ${progress?.stage === 'initializing' || !progress ? 'animate-spin' : ''}`}
+                className={`text-2xl ${progress?.stage === 'initializing' || !progress ? 'animate-spin' : ''}`}
               />
-              <span className="font-medium">
+              <span className="font-bold text-lg">
                 {progress?.stage ? progress.stage.charAt(0).toUpperCase() + progress.stage.slice(1) : 'Starting...'}
               </span>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-800">Overall Progress</span>
-              <span className="text-sm font-medium">{Math.round(progressPercentage)}%</span>
+              <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">Overall Progress</span>
+              <span className="text-lg font-bold text-spotify-green">{Math.round(progressPercentage)}%</span>
             </div>
             
-            <div className={`w-full h-3 rounded-full overflow-hidden ${
-              darkMode ? 'bg-spotify-dark/50' : 'bg-gray-200'
+            <div className={`w-full h-4 rounded-full overflow-hidden ${
+              darkMode ? 'bg-gray-700' : 'bg-gray-200'
             }`}>
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercentage}%` }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="h-full bg-gradient-to-r from-spotify-green to-green-400 rounded-full"
+                className="h-full bg-gradient-to-r from-spotify-green via-emerald-500 to-teal-500 rounded-full shadow-glow"
               />
             </div>
           </div>
@@ -81,7 +82,7 @@ const ProgressPanel = ({ progress, darkMode, isDownloading }) => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-800'}`}
+              className={`text-lg font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}
             >
               {progress.message}
             </motion.div>
@@ -91,21 +92,33 @@ const ProgressPanel = ({ progress, darkMode, isDownloading }) => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`p-4 rounded-lg border ${
+              className={`p-6 rounded-2xl border backdrop-blur-sm ${
                 darkMode 
-                  ? 'bg-spotify-dark/30 border-spotify-light/10' 
-                  : 'bg-gray-50 border-gray-200'
+                  ? 'bg-gray-900/50 border-gray-600/50' 
+                  : 'bg-gray-50/80 border-gray-200/50'
               }`}
             >
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-spotify-green rounded-full animate-pulse" />
-                <span className="font-medium">Currently downloading:</span>
-                <span className="text-spotify-green">{progress.currentTrack}</span>
+              <div className="flex items-center space-x-4">
+                <div className="w-3 h-3 bg-spotify-green rounded-full animate-pulse shadow-glow"></div>
+                <span className="font-bold text-lg text-gray-900 dark:text-white">Currently downloading:</span>
               </div>
+              <div className="mt-3 text-spotify-green font-semibold text-lg">{progress.currentTrack}</div>
               
               {progress.totalTracks > 0 && (
-                <div className="mt-2 text-sm text-gray-600">
-                  Track {progress.completedTracks + 1} of {progress.totalTracks}
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Track {progress.completedTracks + 1} of {progress.totalTracks}
+                  </span>
+                  <div className="flex space-x-1">
+                    {Array.from({ length: Math.min(progress.totalTracks, 10) }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2 h-2 rounded-full ${
+                          i < progress.completedTracks ? 'bg-spotify-green' : 'bg-gray-400'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </motion.div>
