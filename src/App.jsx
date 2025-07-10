@@ -22,16 +22,18 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen transition-all duration-500 ${
+    <div className={`min-h-screen transition-all duration-700 ${
       darkMode 
-        ? 'bg-gradient-to-br from-spotify-dark via-spotify-gray to-black text-white' 
-        : 'bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900'
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white' 
+        : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 text-gray-900'
     }`}>
       <Toaster 
         position="top-right"
         toastOptions={{
           duration: 4000,
-          className: darkMode ? 'bg-spotify-light text-white' : 'bg-white text-gray-900'
+          className: darkMode 
+            ? 'bg-gray-800 text-white border border-gray-700' 
+            : 'bg-white text-gray-900 border border-gray-200 shadow-lg'
         }}
       />
       
