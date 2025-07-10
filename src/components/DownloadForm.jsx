@@ -28,6 +28,7 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
             setMetadata(meta);
           } catch (error) {
             console.error('Failed to fetch metadata:', error);
+            toast.error('Failed to fetch Spotify metadata. Please check the URL or try again later.');
             setMetadata(null);
           }
         } else {
@@ -68,7 +69,7 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
       toast.success('Download completed successfully!');
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error(error.message || 'Download failed. Please try again.');
+      toast.error(error.message || 'Download failed. Please try again. Ensure the URL is correct and the server is running.');
     } finally {
       setIsDownloading(false);
       setDownloadProgress(null); // Reset progress bar
@@ -101,19 +102,21 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
     >
       <div className="space-y-6">
         <div>
-          <label className="block text-lg font-semibold mb-3">
+          <label htmlFor="spotify-url" className="block text-lg font-semibold mb-3">
             Spotify URL
           </label>
           <div className="relative">
             <input
+              id="spotify-url"
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="Paste Spotify track, album, or playlist link here..."
               disabled={isDownloading}
+              aria-label="Spotify URL input"
               className={`w-full px-4 py-4 pr-12 rounded-xl border-2 transition-all duration-300 text-lg ${
-                darkMode 
-                  ? 'bg-spotify-dark/50 border-spotify-light/30 text-white placeholder-gray-400 focus:border-spotify-green' 
+                darkMode
+                  ? 'bg-spotify-dark/50 border-spotify-light/30 text-white placeholder-gray-400 focus:border-spotify-green'
                   : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:border-spotify-green'
               } focus:outline-none focus:ring-2 focus:ring-spotify-green/20 ${
                 isValid === false ? 'border-red-400' : ''
@@ -152,6 +155,7 @@ const DownloadForm = ({ darkMode, setDownloadProgress, setIsDownloading, isDownl
           disabled={!isValid || isDownloading || isValidating}
           whileHover={{ scale: isValid && !isDownloading ? 1.02 : 1 }}
           whileTap={{ scale: isValid && !isDownloading ? 0.98 : 1 }}
+          aria-label="Download Spotify content"
           className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 flex items-center justify-center space-x-3 ${
             isValid && !isDownloading
               ? 'bg-spotify-green hover:bg-spotify-green/90 text-white shadow-lg shadow-spotify-green/25'

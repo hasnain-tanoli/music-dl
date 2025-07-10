@@ -9,7 +9,7 @@ export const downloadSpotifyContent = async (url, onProgress) => {
     const socket = io(API_BASE_URL);
     
     socket.on('connect', () => {
-      console.log('Connected to server');
+      // console.log('Connected to server'); // Removed redundant log
     });
     
     socket.on('download_progress', (data) => {
@@ -21,7 +21,7 @@ export const downloadSpotifyContent = async (url, onProgress) => {
       if (data.downloadUrl) {
         const link = document.createElement('a');
         link.href = `${API_BASE_URL}${data.downloadUrl}`;
-        link.download = data.filename || 'download.mp3';
+        link.download = data.filename || 'download.zip'; // Changed default to .zip
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -42,7 +42,6 @@ export const downloadSpotifyContent = async (url, onProgress) => {
     
     // Start download after socket connection is established
     socket.on('connect', () => {
-      console.log('Connected to server');
       axios.post(`${API_BASE_URL}/api/download`, {
         url,
         socketId: socket.id

@@ -27,9 +27,9 @@ const Header = ({ darkMode, toggleDarkMode }) => {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-spotify-green to-green-400 bg-clip-text text-transparent">
-                Spotify Downloader
+                MusicDL
               </h1>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-800'}`}>
                 Download your favorite music
               </p>
             </div>

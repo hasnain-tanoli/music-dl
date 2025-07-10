@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import downloadRoutes from './routes/download.js';
 import { startCleanupJob } from './utils/cleanup.js';
+import { logger } from './utils/logger.js'; // Import logger
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,7 +15,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: process.env.CLIENT_ORIGIN || "http://localhost:5173", // Use environment variable
     methods: ["GET", "POST"]
   }
 });
@@ -40,10 +41,19 @@ app.get('/health', (req, res) => {
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
-  console.log(`Client connected: ${socket.id}`);
+  logger.info(`Client connected: ${socket.id}`);
   
   socket.on('disconnect', () => {
-    console.log(`Client disconnected: ${socket.id}`);
+    logger.info(`Client disconnected: ${socket.id}`);
+  });
+});
+
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  logger.error(`Unhandled error: ${err.message}`, err.stack);
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error. Please try again later.'
   });
 });
 
@@ -52,5 +62,5 @@ startCleanupJob();
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  logger.info(`Server running on port ${PORT}`);
 });
